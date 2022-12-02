@@ -8,16 +8,16 @@ connection.connect((err) => {
     if (err) {
         console.log(err);
     } else {
-        console.log("personaDB Conectada correctamente");
+        console.log("sedesDB Conectada correctamente");
     }
 });
 //fin de conexion db
 
-var personaDb = {};
+var sedesDb = {};
 
 
-personaDb.getAll = function (funCallback) {
-    connection.query("SELECT * FROM personas where estado >=1", function (err, result, fields) {
+sedesDb.getAll = function (funCallback) {
+    connection.query("SELECT * FROM sedes where estado >=1", function (err, result, fields) {
         if (err) {
             funCallback({
                 message: "Surgio un problema, contactese con un administrador. Gracias",
@@ -30,8 +30,8 @@ personaDb.getAll = function (funCallback) {
     });
 }
 
-personaDb.getByDni = function (dni,funCallback) {
-    connection.query("SELECT * FROM personas WHERE dni=?",dni, function (err, result, fields) {
+sedesDb.getByidSedes = function (idsede,funCallback) {
+    connection.query("SELECT * FROM sedes WHERE idsede=?",idsede, function (err, result, fields) {
         if (err) {
             funCallback({
                 message: "Surgio un problema, contactese con un administrador. Gracias",
@@ -43,7 +43,7 @@ personaDb.getByDni = function (dni,funCallback) {
                 funCallback(undefined, result[0]);
             }else{
                 funCallback({
-                    message: "No se encontro la persona"
+                    message: "No se encontro la sede"
                 });
             }
             
@@ -51,14 +51,14 @@ personaDb.getByDni = function (dni,funCallback) {
     });
 }
 
-personaDb.create = function (persona, funCallback) {
-    var query = 'INSERT INTO personas (dni,nombre,apellido,sexo,fecha_nacimiento) VALUES (?,?,?,?,?)'
-    var dbParams = [persona.dni, persona.nombre, persona.apellido, persona.sexo, persona.fecha_nacimiento];
+sedesDb.create = function (sede, funCallback) {
+    var query = 'INSERT INTO sedes (nombre,direccion,localidad,cod_postal,telcontacto1,telcontacto2) VALUES (?,?,?,?,?,?)'
+    var dbParams = [sede.nombre, sede.direccion, sede.localidad, sede.cod_postal, sede.telcontacto1, sede.telcontacto2];
     connection.query(query, dbParams, function (err, result, fields) {
         if (err) {
             if(err.code == 'ER_DUP_ENTRY'){
                 funCallback({
-                    message: `Ya existe la persona con el DNI ${persona.dni}`,
+                    message: `Ya existe la sede con el id ${sede.nombre}`,
                     detail: err
                 });
             }else{
@@ -71,7 +71,7 @@ personaDb.create = function (persona, funCallback) {
             console.error(err);
         } else {
             funCallback(undefined, {
-                message: `Se creo la persona ${persona.apellido} ${persona.nombre}`,
+                message: `Se creo la sede ${sede.nombre}`,
                 detail: result
             });
         }
@@ -80,8 +80,8 @@ personaDb.create = function (persona, funCallback) {
 
 /**
  * 
- * @param {*} dni 
- * @param {*} persona 
+ * @param {*} sedes
+ * @param {*} idsede
  * @param {*} funCallback 
  *         retorna:
  *              code = 1 (EXITO)
@@ -89,9 +89,9 @@ personaDb.create = function (persona, funCallback) {
  *              code = 3 (ERROR)
  * 
  */
-personaDb.update = function (dni, persona, funCallback) {
-    var query = 'UPDATE personas SET dni = ? , nombre = ?, apellido = ?,  sexo = ?, fecha_nacimiento = ?, estado = ? WHERE dni = ?'
-    var dbParams = [persona.dni, persona.nombre, persona.apellido, persona.sexo, persona.fecha_nacimiento, persona.estado, dni];
+sedesDb.update = function (sede, funCallback) {
+    var query = 'UPDATE sedes SET idmateria = ? , nombre = ?, direccion = ?,  localidad = ?, cod_postal = ?, telcontacto1 = ?, telcontacto2 = ? WHERE idsede = ?'
+    var dbParams = [sede.nombre, sede.direccion, sede.localidad, sede.cod_postal, sede.telcontacto1, sede.telcontacto2];
     connection.query(query, dbParams, function (err, result, fields) {
         if (err) {
             funCallback({
@@ -104,50 +104,24 @@ personaDb.update = function (dni, persona, funCallback) {
             if (result.affectedRows == 0) {
                 funCallback({
                     code:2,
-                    message: `No se encontro la persona ${dni}`,
+                    message: `No se encontro la sede ${sede.nombre}`,
                     detail: result
                 });
             } else {
                 funCallback({
                     code:1,
-                    message: `Se modifico la persona ${persona.apellido} ${persona.nombre}`,
+                    message: `Se modifico la sede ${sede.nombre}`,
                     detail: result
                 });
             }
         }
     });
 
-}
-
-
-personaDb.delete = function(dni,funCallback){
-    var query = 'DELETE FROM personas WHERE dni = ?'
-    connection.query(query, dni, function (err, result, fields) {
-        if (err) {
-            funCallback({
-                message: "Surgio un problema, contactese con un administrador. Gracias",
-                detail: err
-            });
-            console.error(err);
-        } else {
-            if (result.affectedRows == 0) {
-                funCallback(undefined,{
-                    message: `No se encontro la persona ${dni}`,
-                    detail: result
-                });
-            } else {
-                funCallback(undefined,{
-                    message: `Se elimino la persona ${dni}`,
-                    detail: result
-                });
-            }
-        }
-    });
 }
 
 /**
  *  
- * @param {*} idpersona 
+ * @param {*} idsede
  * @param {*} funCallback
  *         retorna:
  *              code = 1 (EXITO)
@@ -155,8 +129,8 @@ personaDb.delete = function(dni,funCallback){
  *              code = 3 (ERROR)
  * 
  */
-personaDb.logdelete = function (idpersona, funCallback) {
-    connection.query("UPDATE personas SET estado = 0 WHERE idpersona = ?",idpersona, function (err, result, fields) {
+sedesDb.logdelete = function (idsede, funCallback) {
+    connection.query("UPDATE sedes SET estado = 0 WHERE idsede = ?",idsede, function (err, result, fields) {
         if (err) {
             funCallback({
                 code:3,
@@ -168,14 +142,14 @@ personaDb.logdelete = function (idpersona, funCallback) {
             if (result.affectedRows == 0) {
                 funCallback({
                     code:2,
-                    message: `No se encontro el id  ${idpersona} de la persona`,
+                    message: `No se encontro el id  ${idsede} de la sede`,
                     detail: result
                 }); 
             } else {
          //       console.error(err);
                     funCallback({
                     code:1,
-                    message: `Se modifico la persona con el id ${idpersona}`,
+                    message: `Se modifico la sede con el id ${idsede}`,
                     detail: result
                 }); 
             }
@@ -183,4 +157,4 @@ personaDb.logdelete = function (idpersona, funCallback) {
     });
 }
 
-module.exports = personaDb;
+module.exports = sedesDb;
